@@ -15,8 +15,8 @@ import java.time.LocalDateTime;
 public class Session {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", columnDefinition = "bigserial")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

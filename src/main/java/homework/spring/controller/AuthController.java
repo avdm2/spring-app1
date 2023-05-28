@@ -1,6 +1,7 @@
 package homework.spring.controller;
 
 import homework.spring.dto.LoginDto;
+import homework.spring.dto.UserInfoDto;
 import homework.spring.security.JWTGenerator;
 import homework.spring.domain.entity.Role;
 import homework.spring.domain.entity.Session;
@@ -22,6 +23,8 @@ import org.apache.commons.validator.routines.EmailValidator;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+
+import static homework.spring.service.UserInfoService.getInfo;
 
 
 @RestController
@@ -88,6 +91,16 @@ public class AuthController {
             return new ResponseEntity<>("Вы вошли!", HttpStatus.OK);
         } catch (BadCredentialsException e) {
             return new ResponseEntity<>("Неверные учетные данные!", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("get_info")
+    public ResponseEntity<String> get_info(@RequestBody UserInfoDto userInfoDto) {
+        User user = userRepository.findByUsername(userInfoDto.getUsername());
+        if (user == null) {
+            return new ResponseEntity<>("Пользователь с указанным ником не зарегистрирован!", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(getInfo(user), HttpStatus.OK);
         }
     }
 }
