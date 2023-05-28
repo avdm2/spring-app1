@@ -8,5 +8,5 @@ import lombok.RequiredArgsConstructor;
 public enum Role {
     CUSTOMER,
     CHEF,
-    MANAGER;
+    MANAGER
 }
