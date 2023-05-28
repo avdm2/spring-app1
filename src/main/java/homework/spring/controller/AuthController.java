@@ -1,14 +1,15 @@
 package homework.spring.controller;
 
-import homework.spring.dto.LoginDto;
-import homework.spring.dto.UserInfoDto;
+import homework.spring.dto.auth.LoginDto;
+import homework.spring.dto.auth.RoleDto;
+import homework.spring.dto.auth.UserInfoDto;
 import homework.spring.security.JWTGenerator;
-import homework.spring.domain.entity.Role;
-import homework.spring.domain.entity.Session;
+import homework.spring.domain.entity.UserRole;
 import homework.spring.domain.entity.User;
-import homework.spring.domain.repository.SessionRepository;
-import homework.spring.domain.repository.UserRepository;
-import homework.spring.dto.RegisterDto;
+import homework.spring.dto.auth.RegisterDto;
+import homework.spring.service.SessionService;
+import homework.spring.service.UserService;
+import homework.spring.utils.RoleValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,13 +19,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.apache.commons.validator.routines.EmailValidator;
-
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-
-import static homework.spring.service.UserInfoService.getInfo;
 
 
 @RestController
@@ -32,58 +29,55 @@ import static homework.spring.service.UserInfoService.getInfo;
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
-    private final UserRepository userRepository;
-    private final SessionRepository sessionRepository;
     private final PasswordEncoder passwordEncoder;
 
+    private final UserService userService;
+    private final SessionService sessionService;
+
     @Autowired
-    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository,
-                          SessionRepository sessionRepository, PasswordEncoder passwordEncoder) {
+    public AuthController(AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder,
+                          UserService userService, SessionService sessionService) {
         this.authenticationManager = authenticationManager;
-        this.userRepository = userRepository;
-        this.sessionRepository = sessionRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userService = userService;
+        this.sessionService = sessionService;
     }
 
     @PostMapping("register")
+    @Transactional
     public ResponseEntity<String> register(@RequestBody RegisterDto registerDto) {
-        if (userRepository.findByEmail(registerDto.getEmail()) != null) {
+        if (registerDto.getUserRole() == null || registerDto.getUsername() == null ||
+                registerDto.getEmail() == null || registerDto.getPassword() == null) {
+            return new ResponseEntity<>("Ошибка! Не все поля заполены!", HttpStatus.BAD_REQUEST);
+        }
+        if (userService.findByEmail(registerDto.getEmail()) != null) {
             return new ResponseEntity<>("Аккаунт с такой почтой уже зарегистрирован!", HttpStatus.BAD_REQUEST);
-        } else if (userRepository.findByUsername(registerDto.getUsername()) != null) {
+        } else if (userService.findByUsername(registerDto.getUsername()) != null) {
             return new ResponseEntity<>("Аккаунт с таким именем пользователя уже зарегистрирован!", HttpStatus.BAD_REQUEST);
         }
 
-        String roleStr = registerDto.getRole().toUpperCase();
-        if (!roleStr.equals("CUSTOMER") && !roleStr.equals("CHEF") && !roleStr.equals("MANAGER")) {
-            return new ResponseEntity<>("Неверная роль!", HttpStatus.BAD_REQUEST);
+        UserRole userRole;
+        try {
+            userRole = RoleValidator.validate(registerDto.getUserRole());
+        } catch (IllegalArgumentException ex) {
+            return new ResponseEntity<>("Некорректная роль!", HttpStatus.BAD_REQUEST);
         }
-        Role role = Role.valueOf(roleStr);
 
         if (!EmailValidator.getInstance().isValid(registerDto.getEmail())) {
             return new ResponseEntity<>("Почтовый адрес некорректен!", HttpStatus.BAD_REQUEST);
         }
 
-        User user = new User()
-                .setEmail(registerDto.getEmail())
-                .setUsername(registerDto.getUsername())
-                .setPassword(passwordEncoder.encode(registerDto.getPassword()))
-                .setCreatedAt(LocalDateTime.now())
-                .setUpdatedAt(LocalDateTime.now())
-                .setRole(role);
+        userService.saveUser(registerDto, passwordEncoder, userRole);
+        sessionService.saveSession(userService.findByEmail(registerDto.getEmail()), new JWTGenerator());
 
-        userRepository.save(user);
-
-        JWTGenerator jwtGenerator = new JWTGenerator();
-        Session session = new Session()
-                .setUser(user)
-                .setSessionToken(jwtGenerator.generateToken(user.getId().toString()))
-                .setExpiresAt(jwtGenerator.expireDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
-        sessionRepository.save(session);
         return new ResponseEntity<>("Пользователь зарегистрирован успешно!", HttpStatus.OK);
     }
 
     @PostMapping("login")
     public ResponseEntity<String> login(@RequestBody LoginDto loginDto) {
+        if (loginDto.getEmail() == null || loginDto.getPassword() == null) {
+            return new ResponseEntity<>("Ошибка! Не все поля заполнены!", HttpStatus.BAD_REQUEST);
+        }
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword()));
@@ -95,12 +89,21 @@ public class AuthController {
     }
 
     @PostMapping("get_info")
-    public ResponseEntity<String> get_info(@RequestBody UserInfoDto userInfoDto) {
-        User user = userRepository.findByUsername(userInfoDto.getUsername());
+    public ResponseEntity<String> getInfo(@RequestBody UserInfoDto userInfoDto) {
+        if (userInfoDto.getUsername() == null) {
+            return new ResponseEntity<>("Ошибка! Пустое имя пользователя!", HttpStatus.BAD_REQUEST);
+        }
+        User user = userService.findByUsername(userInfoDto.getUsername());
         if (user == null) {
             return new ResponseEntity<>("Пользователь с указанным ником не зарегистрирован!", HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(getInfo(user), HttpStatus.OK);
+            return new ResponseEntity<>(
+                    "ID = " + user.getId() +
+                    "; USERNAME = " + user.getUsername() +
+                    "; EMAIL = " + user.getEmail() +
+                    "; ROLE = " + user.getUserRole().toString() +
+                    "; CREATED_AT = " + user.getCreatedAt() +
+                    ";", HttpStatus.OK);
         }
     }
 }

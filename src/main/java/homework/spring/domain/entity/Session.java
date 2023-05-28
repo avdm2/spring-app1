@@ -19,7 +19,7 @@ public class Session {
     @Column(name = "id", columnDefinition = "bigserial")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 

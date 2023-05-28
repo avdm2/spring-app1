@@ -1,4 +1,4 @@
-package homework.spring.dto;
+package homework.spring.dto.auth;
 
 import lombok.Data;
 

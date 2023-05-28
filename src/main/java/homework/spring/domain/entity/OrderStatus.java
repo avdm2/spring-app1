@@ -5,8 +5,9 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum Role {
-    CUSTOMER,
-    CHEF,
-    MANAGER
+public enum OrderStatus {
+    ACCEPTED,
+    PENDING,
+    DONE,
+    CANCELED
 }

@@ -13,26 +13,24 @@ import java.time.LocalDateTime;
 @Accessors(chain = true)
 @NoArgsConstructor
 @Entity
-@Table(name = "users")
-public class User {
+@Table(name = "orders")
+public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "username", nullable = false, unique = true, length = 50)
-    private String username;
-
-    @Column(name = "email", nullable = false, unique = true, length = 100)
-    private String email;
-
-    @Column(name = "password_hash", nullable = false)
-    private String password;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
-    private UserRole userRole;
+    @Column(name = "status", length = 50, nullable = false)
+    private OrderStatus orderStatus;
+
+    @Column(name = "special_requests")
+    private String specialRequests;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
