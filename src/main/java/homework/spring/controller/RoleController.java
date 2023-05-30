@@ -8,6 +8,7 @@ import homework.spring.service.UserService;
 import homework.spring.utils.RoleValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,6 +26,7 @@ public class RoleController {
     }
 
     @PostMapping("change")
+    @PreAuthorize("hasRole('CHEF')")
     @Transactional
     public ResponseEntity<String> changeRole(@RequestBody RoleDto roleDto) {
         if (roleDto.getUsername() == null || roleDto.getUserRole() == null) {
