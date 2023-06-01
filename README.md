@@ -80,16 +80,9 @@ Route - **"/api/orders/create"**.
 ---
 
 ### Получение информации о заказе
-Method - **POST**.
+Method - **GET**.
 
-Route - **"/api/orders/get"**.
-
-Запрос:
-```json
-{
-    "id": 1
-}
-```
+Route - **"/api/orders/{id}"**.
 
 ---
 
