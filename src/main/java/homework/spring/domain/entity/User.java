@@ -31,7 +31,7 @@ public class User {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", length = 50, nullable = false)
+    @Column(name = "role", nullable = false)
     private UserRole userRole;
 
     @CreationTimestamp

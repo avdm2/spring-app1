@@ -4,6 +4,7 @@ import homework.spring.domain.entity.Order;
 import homework.spring.domain.entity.OrderStatus;
 import homework.spring.domain.entity.User;
 import homework.spring.dto.restaurant.OrderCreationDto;
+import homework.spring.dto.restaurant.OrderGetDto;
 import homework.spring.service.OrderService;
 import homework.spring.service.UserService;
 import homework.spring.utils.StatusValidator;
@@ -11,7 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -49,10 +53,13 @@ public class OrderController {
         }
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<String> getOrder(@PathVariable Long id) {
+    @PostMapping("get")
+    public ResponseEntity<String> getOrder(@RequestBody OrderGetDto orderGetDto) {
+        if (orderGetDto.getId() == null) {
+            return new ResponseEntity<>("Ошибка! Значение ID не может быть пустым!", HttpStatus.BAD_REQUEST);
+        }
         try {
-            Order order = orderService.findById(id);
+            Order order = orderService.findById(orderGetDto.getId());
             return new ResponseEntity<>(
                     "USERNAME = " + order.getUser().getUsername() +
                     "; STATUS = " + order.getOrderStatus() +

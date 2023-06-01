@@ -1,6 +1,7 @@
 package homework.spring.controller;
 
 import homework.spring.dto.auth.LoginDto;
+import homework.spring.dto.auth.RoleDto;
 import homework.spring.dto.auth.UserInfoDto;
 import homework.spring.security.JWTGenerator;
 import homework.spring.domain.entity.UserRole;
