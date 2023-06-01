@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
+
 @RestController
 @RequestMapping("/api/roles")
 public class RoleController {
@@ -43,6 +45,8 @@ public class RoleController {
                 .findByUsername(roleDto.getUsername())
                 .setUserRole(userRole);
         userService.saveUser(user);
+
+        user.setUpdatedAt(LocalDateTime.now());
 
         return new ResponseEntity<>(
                 "Роль " + userRole.toString() +
