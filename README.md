@@ -3,7 +3,7 @@
 
 ## Стек
 - Язык: `Java`
-- Фреймворки: `Spring Boot`, `Lombok`, `JWT`, `Apache Commons Validator`
+- Фреймворк: `Spring Boot`
 - СУБД: `PostgreSQL`
 - API-requests: `Postman`
 ## API
